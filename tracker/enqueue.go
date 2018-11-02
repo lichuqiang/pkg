@@ -125,8 +125,16 @@ func objectReference(item accessor) corev1.ObjectReference {
 func (i *impl) OnChanged(obj interface{}) {
 	item, ok := obj.(accessor)
 	if !ok {
-		// TODO(mattmoor): We should consider logging here.
-		return
+		// To handle obj deletion, try to fetch info from DeletedFinalStateUnknown.
+		tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
+		if !ok {
+			return
+		}
+		item, ok = tombstone.Obj.(accessor)
+		if !ok {
+			// TODO(mattmoor): We should consider logging here.
+			return
+		}
 	}
 
 	or := objectReference(item)

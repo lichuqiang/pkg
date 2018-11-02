@@ -23,6 +23,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/tools/cache"
 
 	. "github.com/knative/pkg/testing"
 )
@@ -115,6 +116,30 @@ func TestHappyPaths(t *testing.T) {
 		trk.OnChanged("not an accessor")
 
 		if got, want := calls, 3; got != want {
+			t.Errorf("OnChanged() = %v, wanted %v", got, want)
+		}
+	})
+
+	t.Run("OnChanged non-accessor in DeletedFinalStateUnknown", func(t *testing.T) {
+		// Check that passing in a DeletedFinalStateUnknown instance
+		// with a resource that doesn't implement accessor won't get
+		// Tracked called, and won't panic.
+		trk.OnChanged(cache.DeletedFinalStateUnknown{
+			Key: "ns/foo",
+			Obj: "not an accessor",
+		})
+
+		if got, want := calls, 3; got != want {
+			t.Errorf("OnChanged() = %v, wanted %v", got, want)
+		}
+	})
+
+	t.Run("Tracked gets called by DeletedFinalStateUnknown", func(t *testing.T) {
+		trk.OnChanged(cache.DeletedFinalStateUnknown{
+			Key: "ns/foo",
+			Obj: thing1,
+		})
+		if got, want := calls, 4; got != want {
 			t.Errorf("OnChanged() = %v, wanted %v", got, want)
 		}
 	})
