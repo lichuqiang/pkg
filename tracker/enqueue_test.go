@@ -28,9 +28,6 @@ import (
 	. "github.com/knative/pkg/testing"
 )
 
-// Ensure our resource satisfies the interface.
-var _ accessor = (*Resource)(nil)
-
 func TestHappyPaths(t *testing.T) {
 	calls := 0
 	f := func(key string) {
